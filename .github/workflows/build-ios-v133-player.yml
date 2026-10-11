@@ -30,10 +30,6 @@ on:
         description: 'Language dictionary: converter script from custom-dict/ (zip -> JMdict xml)'
         type: string
         default: kolobok_to_jmdict.py
-      display_120hz:
-        description: 'Let the display link run above 60 Hz on ProMotion (CADisableMinimumFrameDurationOnPhone). Turn off to compare with 60 Hz.'
-        type: boolean
-        default: true
 
 env:
   APP_VERSION: "1.33"
@@ -41,7 +37,7 @@ env:
 
 jobs:
   build:
-    runs-on: macos-14
+    runs-on: macos-26
     timeout-minutes: 120
     permissions:
       contents: read
@@ -59,10 +55,17 @@ jobs:
           ref: ${{ env.RELEASE_COMMIT }}
           path: src
 
-      - name: Select Xcode 16.2
+      - name: Select Xcode (latest stable)
         uses: maxim-lobanov/setup-xcode@v1
         with:
-          xcode-version: '16.2'
+          xcode-version: latest-stable
+
+      - name: Install the iOS platform (needed for device builds on Xcode 26)
+        run: |
+          xcodebuild -version
+          xcodebuild -showsdks | grep -i "iOS" || true
+          xcodebuild -downloadPlatform iOS
+          xcodebuild -showsdks | grep -i "iOS" || true
 
       - name: Install pnpm
         uses: pnpm/action-setup@v4
@@ -8546,7 +8549,6 @@ jobs:
           PY
 
       - name: Patch Info.plist (120 Hz display link for smoother video)
-        if: ${{ inputs.display_120hz }}
         run: |
           python3 - <<'PY'
           import plistlib, pathlib
@@ -9399,6 +9401,169 @@ jobs:
           print("v129 fixes applied")
           PY
 
+      - name: Interpolation test (VideoToolbox, iOS 26) in the player settings
+        run: |
+          python3 - <<'PY'
+          import pathlib
+
+          def replace_once(text, old, new, label):
+              assert text.count(old) == 1, "pattern not found exactly once: " + label
+              return text.replace(old, new)
+
+          PROBE = r'''/// Test of the system frame interpolation (VideoToolbox, iOS 26): is it supported and how long does one frame take.
+          enum InterpolationProbe {
+              static func run() async -> String {
+                  if #available(iOS 26.0, *) {
+                      return await probe()
+                  }
+                  return "Нужна iOS 26 или новее"
+              }
+
+              static func fourCC(_ value: UInt32) -> String {
+                  let bytes = [UInt8((value >> 24) & 0xFF), UInt8((value >> 16) & 0xFF), UInt8((value >> 8) & 0xFF), UInt8(value & 0xFF)]
+                  let text = String(bytes: bytes, encoding: .ascii) ?? "?"
+                  return text.trimmingCharacters(in: .controlCharacters).isEmpty ? String(format: "0x%08X", value) : text
+              }
+
+              static func makeBuffer(_ width: Int, _ height: Int, _ format: OSType) -> CVPixelBuffer? {
+                  let attrs: [String: Any] = [
+                      kCVPixelBufferIOSurfacePropertiesKey as String: [String: Any](),
+                      kCVPixelBufferMetalCompatibilityKey as String: true
+                  ]
+                  var created: CVPixelBuffer?
+                  guard CVPixelBufferCreate(kCFAllocatorDefault, width, height, format, attrs as CFDictionary, &created) == kCVReturnSuccess,
+                        let buffer = created else { return nil }
+                  CVPixelBufferLockBaseAddress(buffer, [])
+                  defer { CVPixelBufferUnlockBaseAddress(buffer, []) }
+                  let planes = CVPixelBufferGetPlaneCount(buffer)
+                  if planes == 0 {
+                      if let base = CVPixelBufferGetBaseAddress(buffer) {
+                          memset(base, 0x80, CVPixelBufferGetBytesPerRow(buffer) * CVPixelBufferGetHeight(buffer))
+                      }
+                  } else {
+                      for plane in 0..<planes {
+                          if let base = CVPixelBufferGetBaseAddressOfPlane(buffer, plane) {
+                              memset(base, 0x80, CVPixelBufferGetBytesPerRowOfPlane(buffer, plane) * CVPixelBufferGetHeightOfPlane(buffer, plane))
+                          }
+                      }
+                  }
+                  return buffer
+              }
+
+              @available(iOS 26.0, *)
+              static func probe() async -> String {
+                  guard VTLowLatencyFrameInterpolationConfiguration.isSupported else {
+                      return "Интерполяция VideoToolbox: не поддерживается на этом устройстве"
+                  }
+                  var lines = ["Интерполяция VideoToolbox: поддерживается"]
+                  for size in [(1280, 720), (1920, 1080)] {
+                      lines.append(await measure(width: size.0, height: size.1))
+                  }
+                  return lines.joined(separator: "\n")
+              }
+
+              /// One frame pair of the given pixel format: the time of one interpolation in ms, or the reason of the failure.
+              @available(iOS 26.0, *)
+              static func timeFormat(_ processor: VTFrameProcessor, _ width: Int, _ height: Int, _ format: OSType) async -> (Double?, String) {
+                  guard let previousBuffer = makeBuffer(width, height, format),
+                        let sourceBuffer = makeBuffer(width, height, format),
+                        let destinationBuffer = makeBuffer(width, height, format) else {
+                      return (nil, "буферы не созданы")
+                  }
+                  let previous: VTFrameProcessorFrame? = VTFrameProcessorFrame(buffer: previousBuffer, presentationTimeStamp: CMTime(value: 0, timescale: 48))
+                  let source: VTFrameProcessorFrame? = VTFrameProcessorFrame(buffer: sourceBuffer, presentationTimeStamp: CMTime(value: 2, timescale: 48))
+                  let destination: VTFrameProcessorFrame? = VTFrameProcessorFrame(buffer: destinationBuffer, presentationTimeStamp: CMTime(value: 1, timescale: 48))
+                  guard let previous, let source, let destination else { return (nil, "кадры не созданы") }
+                  let made: VTLowLatencyFrameInterpolationParameters? =
+                      VTLowLatencyFrameInterpolationParameters(sourceFrame: source, previousFrame: previous,
+                                                               interpolationPhase: [0.5], destinationFrames: [destination])
+                  guard let parameters = made else { return (nil, "параметры не созданы") }
+                  do {
+                      try await processor.process(parameters: parameters)   // the first call loads the model
+                      let begin = CFAbsoluteTimeGetCurrent()
+                      for _ in 0..<20 {
+                          try await processor.process(parameters: parameters)
+                      }
+                      return ((CFAbsoluteTimeGetCurrent() - begin) * 1000 / 20, "")
+                  } catch {
+                      return (nil, error.localizedDescription)
+                  }
+              }
+
+              @available(iOS 26.0, *)
+              static func measure(width: Int, height: Int) async -> String {
+                  let name = "\(width)x\(height)"
+                  let made: VTLowLatencyFrameInterpolationConfiguration? =
+                      VTLowLatencyFrameInterpolationConfiguration(frameWidth: width, frameHeight: height, numberOfInterpolatedFrames: 1)
+                  guard let config = made else { return "\(name): конфигурация не создана" }
+
+                  let processor = VTFrameProcessor()
+                  let started = CFAbsoluteTimeGetCurrent()
+                  do {
+                      try processor.startSession(configuration: config)
+                  } catch {
+                      return "\(name): сессия не запущена (\(error.localizedDescription))"
+                  }
+                  let startMs = Int((CFAbsoluteTimeGetCurrent() - started) * 1000)
+
+                  let candidates: [OSType] = [
+                      kCVPixelFormatType_420YpCbCr8BiPlanarFullRange,
+                      kCVPixelFormatType_420YpCbCr8BiPlanarVideoRange,
+                      kCVPixelFormatType_32BGRA,
+                      kCVPixelFormatType_420YpCbCr10BiPlanarVideoRange
+                  ]
+                  var failures: [String] = []
+                  for format in candidates {
+                      let result = await timeFormat(processor, width, height, format)
+                      if let ms = result.0 {
+                          processor.endSession()
+                          return "\(name): запуск \(startMs) мс, кадр \(String(format: "%.1f", ms)) мс (на 24→48 бюджет 41 мс), формат \(fourCC(format))"
+                      }
+                      failures.append("\(fourCC(format)): \(result.1)")
+                  }
+                  processor.endSession()
+                  return "\(name): ни один формат не подошёл (\(failures.joined(separator: "; ")))"
+              }
+          }
+
+          struct InterpolationProbeSection: View {
+              @State private var text = ""
+              @State private var busy = false
+
+              var body: some View {
+                  Section("Интерполяция кадров (тест)") {
+                      Button(busy ? "Проверка..." : "Проверить поддержку и скорость") {
+                          guard !busy else { return }
+                          busy = true
+                          Task {
+                              let result = await InterpolationProbe.run()
+                              text = result
+                              busy = false
+                          }
+                      }
+                      if !text.isEmpty {
+                          Text(text).font(.footnote).foregroundColor(.secondary)
+                      }
+                  }
+              }
+          }
+
+          '''
+
+          p = pathlib.Path("src/safari/iOS (App)/HelpView.swift")
+          s = p.read_text(encoding="utf-8")
+          if "import VideoToolbox" not in s:
+              s = "import VideoToolbox\nimport CoreVideo\nimport CoreMedia\n" + s
+          s = replace_once(s, "/// One folder of the video library", PROBE + "/// One folder of the video library", "probe block")
+          s = replace_once(s, '''                Section("Субтитры") {
+                              Button("Найти японские субтитры на Jimaku") { searchJimaku() }''',
+                           '''                InterpolationProbeSection()
+                          Section("Субтитры") {
+                              Button("Найти японские субтитры на Jimaku") { searchJimaku() }''', "settings section")
+          p.write_text(s, encoding="utf-8")
+          print("probe added")
+          PY
+
       - name: Optimizations - shared formatters
         run: |
           python3 - <<'PY'
@@ -9472,78 +9637,6 @@ jobs:
                   done += n
               p.write_text(t, encoding="utf-8")
               print(f"highlight descriptions: {done} of {len(replacements)} replaced")
-          PY
-
-      - name: "Native player v1.30: decoding settings (hardware / async)"
-        run: |
-          python3 - <<'PY'
-          import pathlib
-          p = pathlib.Path("src/safari/iOS (App)/HelpView.swift")
-          s = p.read_text(encoding="utf-8")
-          def once(text, old, new, label):
-              assert text.count(old) == 1, "pattern not found exactly once: " + label
-              return text.replace(old, new)
-
-          s = once(s, '@State private var options = KSOptions()', """@State private var options = NativeVideoPlayerScreen.makeOptions()
-                        @AppStorage("ykHWDecode") private var ykHWDecode = true
-                        @AppStorage("ykAsyncDecode") private var ykAsyncDecode = true
-
-                        /// Decoding settings from the player menu, read when the video screen opens (applies to the next video).
-                        static func makeOptions() -> KSOptions {
-                            let d = UserDefaults.standard
-                            let o = KSOptions()
-                            o.hardwareDecode = d.object(forKey: "ykHWDecode") as? Bool ?? true
-                            o.asynchronousDecompression = d.object(forKey: "ykAsyncDecode") as? Bool ?? true
-                            return o
-                        }""", "options")
-          s = once(s, 'Section("Субтитры") {', """Section("Декодирование") {
-                                        Toggle("Аппаратное декодирование", isOn: $ykHWDecode)
-                                        Toggle("Асинхронное декодирование", isOn: $ykAsyncDecode)
-                                        Text("Применяется при следующем открытии видео").font(.caption).foregroundColor(.secondary)
-                                    }
-                                    Section("Субтитры") {""", "section")
-          p.write_text(s, encoding="utf-8")
-          print("v1.30 applied")
-          PY
-
-      - name: "Native player v1.31: buffer setting"
-        run: |
-          python3 - <<'PY'
-          import pathlib
-          p = pathlib.Path("src/safari/iOS (App)/HelpView.swift")
-          s = p.read_text(encoding="utf-8")
-          def once(text, old, new, label):
-              assert text.count(old) == 1, "pattern not found exactly once: " + label
-              return text.replace(old, new)
-
-          s = once(s, '@AppStorage("ykAsyncDecode") private var ykAsyncDecode = true',
-                   '@AppStorage("ykAsyncDecode") private var ykAsyncDecode = true\n              @AppStorage("ykBufferSec") private var ykBufferSec: Double = 3', "storage")
-          s = once(s, 'o.asynchronousDecompression = d.object(forKey: "ykAsyncDecode") as? Bool ?? true',
-                   'o.asynchronousDecompression = d.object(forKey: "ykAsyncDecode") as? Bool ?? true\n                  let buf = d.double(forKey: "ykBufferSec")\n                  o.preferredForwardBufferDuration = buf > 0 ? buf : 3.0', "make")
-          s = once(s, 'Toggle("Асинхронное декодирование", isOn: $ykAsyncDecode)',
-                   'Toggle("Асинхронное декодирование", isOn: $ykAsyncDecode)\n                              Picker("Буфер вперёд", selection: $ykBufferSec) {\n                                  Text("3 с").tag(3.0)\n                                  Text("6 с").tag(6.0)\n                                  Text("10 с").tag(10.0)\n                                  Text("15 с").tag(15.0)\n                              }', "picker")
-          p.write_text(s, encoding="utf-8")
-          print("v1.31 applied")
-          PY
-
-      - name: "Native player v1.32: sync decoding setting"
-        run: |
-          python3 - <<'PY'
-          import pathlib
-          p = pathlib.Path("src/safari/iOS (App)/HelpView.swift")
-          s = p.read_text(encoding="utf-8")
-          def once(text, old, new, label):
-              assert text.count(old) == 1, "pattern not found exactly once: " + label
-              return text.replace(old, new)
-
-          s = once(s, '@AppStorage("ykBufferSec") private var ykBufferSec: Double = 3',
-                   '@AppStorage("ykBufferSec") private var ykBufferSec: Double = 3\n              @AppStorage("ykSyncDecode") private var ykSyncDecode = false', "storage")
-          s = once(s, 'o.preferredForwardBufferDuration = buf > 0 ? buf : 3.0',
-                   'o.preferredForwardBufferDuration = buf > 0 ? buf : 3.0\n                  o.syncDecodeVideo = d.bool(forKey: "ykSyncDecode")', "make")
-          s = once(s, 'Text("Применяется при следующем открытии видео")',
-                   'Toggle("Синхронное декодирование видео", isOn: $ykSyncDecode)\n                              Text("Применяется при следующем открытии видео")', "toggle")
-          p.write_text(s, encoding="utf-8")
-          print("v1.32 applied")
           PY
 
       - name: Pre-generate files that Xcode expects to already exist
