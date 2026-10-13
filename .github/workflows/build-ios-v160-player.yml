@@ -2057,6 +2057,10 @@ jobs:
         run: |
           python3 "$GITHUB_WORKSPACE/ours/ci/patches/v160-one-tap-anki.py"
 
+      - name: "Native player v1.60: check mark instead of the add button for added and queued words"
+        run: |
+          python3 "$GITHUB_WORKSPACE/ours/ci/patches/v160-added-check.py"
+
       - name: Pre-generate files that Xcode expects to already exist
         working-directory: src
         run: |
