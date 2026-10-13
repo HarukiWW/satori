@@ -1,4 +1,4 @@
-name: Build iOS v1.61 (Russian dictionary)
+name: Build iOS v1.62 (Russian dictionary)
 
 # Builds the upstream v0.3.5 release code (base) with the Russian dictionary and our own changes.
 # The app version is set in ONE place: APP_VERSION below.
@@ -36,7 +36,7 @@ on:
         default: true
 
 env:
-  APP_VERSION: "1.61"
+  APP_VERSION: "1.62"
   RELEASE_COMMIT: 0f9ea39181d1dc66ce715665f5ef08b494e261a1
 
 jobs:
@@ -2064,6 +2064,10 @@ jobs:
       - name: "Native player v1.61: moving to folders, start at the saved position, next episode, common queue, Safari known words, diagnostics page"
         run: |
           python3 "$GITHUB_WORKSPACE/ours/ci/patches/v161-fixes.py"
+
+      - name: "Native player v1.62: YouTube videos with Japanese captions, lookup and mining"
+        run: |
+          python3 "$GITHUB_WORKSPACE/ours/ci/patches/v162-youtube.py"
 
       - name: Pre-generate files that Xcode expects to already exist
         working-directory: src
