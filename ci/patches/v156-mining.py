@@ -309,5 +309,24 @@ struct MiningQueueView: View {
     }
 }
 '''
+# the swipe label of v1.54 was one long expression the compiler could not type-check in time: built step by step now
+s = once(s, """            let delta = swipeTarget - start
+            Text((delta < 0 ? "« " : "» ") + clock(swipeTarget) + "  (" + (delta < 0 ? "−" : "+") + clock(abs(delta)) + ")")
+""", """            Text(swipeLabel(start: start))
+""", "swipe label")
+s = once(s, """    @ViewBuilder
+    private var swipeOverlay: some View {
+""", """    private func swipeLabel(start: Double) -> String {
+        let delta: Double = swipeTarget - start
+        let arrow: String = delta < 0 ? "« " : "» "
+        let sign: String = delta < 0 ? "−" : "+"
+        let target: String = clock(swipeTarget)
+        let shift: String = clock(abs(delta))
+        return arrow + target + "  (" + sign + shift + ")"
+    }
+
+    @ViewBuilder
+    private var swipeOverlay: some View {
+""", "swipe label func")
 hv.write_text(s, encoding="utf-8")
 print("v1.56 mining applied")
