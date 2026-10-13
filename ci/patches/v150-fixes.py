@@ -50,6 +50,7 @@ s = once(s, """                    reading = KnownWordsIndex.isKana(base) ? High
 a = s.index("/// Known words for the coverage badge")
 s = s[:a] + '''/// Known words for the coverage badge, matched in any form: the dictionary form of an inflected word, the word written
 /// in kana, another spelling with the same reading and a common kanji, the stem of a する verb.
+@available(iOS 16.0, *)
 struct KnownWordsIndex {
     var forms = Set<String>()
     var kanaReadings = Set<String>()
