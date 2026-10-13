@@ -2049,6 +2049,10 @@ jobs:
         run: |
           python3 "$GITHUB_WORKSPACE/ours/ci/patches/v160-analysis.py"
 
+      - name: "Native player v1.60: mining queue words counted when the note reaches Anki"
+        run: |
+          python3 "$GITHUB_WORKSPACE/ours/ci/patches/v160-mining-stats.py"
+
       - name: Pre-generate files that Xcode expects to already exist
         working-directory: src
         run: |
