@@ -266,8 +266,16 @@ enum CatalogStore {
         var quoted = false
         var iterator = text.makeIterator()
         var pending: Character? = nil
-        while let char = pending ?? iterator.next() {
-            pending = nil
+        while true {
+            let char: Character
+            if let waiting = pending {
+                char = waiting
+                pending = nil
+            } else if let read = iterator.next() {
+                char = read
+            } else {
+                break
+            }
             if quoted {
                 if char == "\"" {
                     if let next = iterator.next() {

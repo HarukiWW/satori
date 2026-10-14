@@ -79,6 +79,12 @@ s = times(s, """struct YouTubeRecentSection: View {
     /// loaded by the list when it appears
     @Binding var items: [YouTubeItem]
     @State private var pendingDelete: YouTubeItem? = nil
+
+    static func question(_ item: YouTubeItem?) -> String {
+        guard let item else { return "Удалить?" }
+        let name: String = item.title.isEmpty ? item.id : item.title
+        return "Удалить «" + name + "»?"
+    }
 """, 1, "pending delete")
 s = times(s, """                        .swipeActions(edge: .trailing, allowsFullSwipe: true) {
                             Button(role: .destructive) {
@@ -116,7 +122,7 @@ s = times(s, """                } header: {
             }
         }
         // the same question and animation as for the other videos
-        .alert(pendingDelete.map { "Удалить «" + ($0.title.isEmpty ? $0.id : $0.title) + "»?" } ?? "Удалить?",
+        .alert(YouTubeRecentSection.question(pendingDelete),
                isPresented: Binding(get: { pendingDelete != nil }, set: { if !$0 { pendingDelete = nil } })) {
             Button("Удалить", role: .destructive) {
                 if let item = pendingDelete {

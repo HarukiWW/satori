@@ -141,7 +141,12 @@ enum SyosetuClient {
 
     /// One episode (a short story is the page of the novel itself).
     static func episode(_ ncode: String, _ number: Int, shortStory: Bool) async throws -> NovelText {
-        guard let url = URL(string: site + ncode + "/" + (shortStory ? "" : String(number) + "/")) else {
+        // the type checker is kept simple: the address is built in steps
+        var address: String = site + ncode + "/"
+        if !shortStory {
+            address += String(number) + "/"
+        }
+        guard let url = URL(string: address) else {
             throw SyosetuError.notFound
         }
         let html = String(decoding: try await load(url), as: UTF8.self)
@@ -313,9 +318,13 @@ final class NovelStore: ObservableObject {
         let ncode = code.lowercased()
         guard novel(ncode) == nil else { return }
         let (hit, story) = try await SyosetuClient.info(ncode)
-        let episodes = hit.shortStory
-            ? [NovelEpisode(number: 1, title: hit.title, volume: "")]
-            : try await SyosetuClient.toc(ncode)
+        // ("try" cannot stand inside a ?: expression)
+        let episodes: [NovelEpisode]
+        if hit.shortStory {
+            episodes = [NovelEpisode(number: 1, title: hit.title, volume: "")]
+        } else {
+            episodes = try await SyosetuClient.toc(ncode)
+        }
         let info = NovelInfo(ncode: ncode, title: hit.title, writer: hit.writer, story: story, shortStory: hit.shortStory,
                              finished: hit.finished, episodes: episodes, addedAt: Date())
         save(info)
@@ -329,7 +338,12 @@ final class NovelStore: ObservableObject {
     func refresh(_ ncode: String) async throws {
         guard let current = novel(ncode) else { return }
         let (hit, story) = try await SyosetuClient.info(ncode)
-        let episodes = current.shortStory ? current.episodes : try await SyosetuClient.toc(ncode)
+        let episodes: [NovelEpisode]
+        if current.shortStory {
+            episodes = current.episodes
+        } else {
+            episodes = try await SyosetuClient.toc(ncode)
+        }
         update(ncode) { info in
             info.title = hit.title
             info.writer = hit.writer
@@ -555,6 +569,12 @@ struct NovelLibraryView: View {
 struct NovelJobRow: View {
     let job: NovelStore.Job
 
+    /// about 1.6 s per episode (a page, a pause)
+    static func remaining(_ episodes: Int) -> String {
+        let minutes: Int = max(1, Int((Double(episodes) * 1.6 / 60).rounded(.up)))
+        return "Осталось около " + String(minutes) + " мин. Экран не гаснет, пока идёт загрузка."
+    }
+
     var body: some View {
         VStack(alignment: .leading, spacing: 6) {
             HStack {
@@ -568,7 +588,7 @@ struct NovelJobRow: View {
             ProgressView(value: Double(job.done), total: Double(max(job.total, 1)))
                 .tint(.accentColor)
             let left = max(0, job.total - job.done)
-            Text("Осталось около " + String(max(1, Int((Double(left) * 1.6 / 60).rounded(.up)))) + " мин. Экран не гаснет, пока идёт загрузка.")
+            Text(NovelJobRow.remaining(left))
                 .font(.caption)
                 .foregroundColor(.secondary)
         }
@@ -766,8 +786,7 @@ struct NovelDetailView: View {
             Section {
                 VStack(alignment: .leading, spacing: 6) {
                     Text(novel.title).font(.headline)
-                    Text(novel.writer + " · " + (novel.finished ? "завершена" : "выходит") + " · "
-                         + String(novel.episodes.count) + " гл.")
+                    Text(NovelDetailView.summary(novel))
                         .font(.subheadline)
                         .foregroundColor(.secondary)
                     if !novel.story.isEmpty {
@@ -785,7 +804,7 @@ struct NovelDetailView: View {
             Section {
                 if let next, let episode = novel.episodes.first(where: { $0.number == next }) {
                     NavigationLink(destination: NovelReaderView(ncode: ncode, number: next)) {
-                        Label((novel.lastRead == nil ? "Начать: " : "Продолжить: ") + episode.title, systemImage: "book")
+                        Label(NovelDetailView.continueTitle(novel, episode), systemImage: "book")
                             .lineLimit(1)
                     }
                 }
@@ -839,6 +858,18 @@ struct NovelDetailView: View {
         }
         .navigationTitle(novel.title)
         .navigationBarTitleDisplayMode(.inline)
+    }
+
+    /// "author · finished · 286 гл." built in steps (one long expression is slow for the type checker)
+    static func continueTitle(_ novel: NovelInfo, _ episode: NovelEpisode) -> String {
+        let action: String = novel.lastRead == nil ? "Начать: " : "Продолжить: "
+        return action + episode.title
+    }
+
+    static func summary(_ novel: NovelInfo) -> String {
+        let state: String = novel.finished ? "завершена" : "выходит"
+        let count: String = String(novel.episodes.count) + " гл."
+        return [novel.writer, state, count].filter { !$0.isEmpty }.joined(separator: " · ")
     }
 
     private func volumeHeader(_ volume: Volume, saved: Set<Int>) -> some View {

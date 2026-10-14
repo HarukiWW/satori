@@ -2177,11 +2177,17 @@ jobs:
             MARKETING_VERSION=${{ env.APP_VERSION }} CURRENT_PROJECT_VERSION=${{ env.APP_VERSION }} \
             build 2>&1 | tee xcodebuild.log
       - name: Show build errors
-        if: failure()
+        if: always()
         working-directory: src
         run: |
+          [ -f xcodebuild.log ] || exit 0
           echo "=== lines with errors ==="
           grep -n -B3 -A6 "error:\|fatal:\|Entry Already\|Error Reading\|Command PhaseScriptExecution failed" xcodebuild.log | head -250 || true
+          # the compiler errors also as annotations: they can be read without signing in to GitHub
+          grep -E "(error|fatal error): " xcodebuild.log | sed -E 's#^.*/src/##' | sort -u | head -40 | while IFS= read -r line; do
+            line=${line//%/%25}
+            echo "::error title=xcodebuild::${line}"
+          done || true
 
       - name: Package .ipa
         working-directory: src
