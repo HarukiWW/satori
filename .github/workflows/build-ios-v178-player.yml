@@ -1,4 +1,4 @@
-name: Build iOS v1.77 Satori (Russian dictionary)
+name: Build iOS v1.78 Satori (Russian dictionary)
 
 # Builds the upstream v0.3.5 release code (base) with the Russian dictionary and our own changes.
 # The app version is set in ONE place: APP_VERSION below.
@@ -36,7 +36,7 @@ on:
         default: true
 
 env:
-  APP_VERSION: "1.77"
+  APP_VERSION: "1.78"
   RELEASE_COMMIT: 0f9ea39181d1dc66ce715665f5ef08b494e261a1
 
 jobs:
@@ -2160,6 +2160,14 @@ jobs:
       - name: "Satori v1.77: dictionary examples in notes, decks open in Satori"
         run: |
           python3 "$GITHUB_WORKSPACE/ours/ci/patches/v177-anki.py"
+
+      - name: "Satori v1.78: reading statistics at a reading pace"
+        run: |
+          python3 "$GITHUB_WORKSPACE/ours/ci/patches/v178-reader.py"
+
+      - name: "Satori v1.78: calibration and JLPT estimate from one knowledge curve"
+        run: |
+          python3 "$GITHUB_WORKSPACE/ours/ci/patches/v178-level.py"
 
       - name: Pre-generate files that Xcode expects to already exist
         working-directory: src
