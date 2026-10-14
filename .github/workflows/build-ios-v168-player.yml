@@ -1,4 +1,4 @@
-name: Build iOS v1.67 (Russian dictionary)
+name: Build iOS v1.68 Satori (Russian dictionary)
 
 # Builds the upstream v0.3.5 release code (base) with the Russian dictionary and our own changes.
 # The app version is set in ONE place: APP_VERSION below.
@@ -36,7 +36,7 @@ on:
         default: true
 
 env:
-  APP_VERSION: "1.67"
+  APP_VERSION: "1.68"
   RELEASE_COMMIT: 0f9ea39181d1dc66ce715665f5ef08b494e261a1
 
 jobs:
@@ -2089,6 +2089,14 @@ jobs:
         run: |
           python3 "$GITHUB_WORKSPACE/ours/ci/patches/v167-adding-spinner.py"
 
+      - name: "Native player v1.68: subtitle lines keep up, queued words not highlighted"
+        run: |
+          python3 "$GITHUB_WORKSPACE/ours/ci/patches/v168-subtitles.py"
+
+      - name: "Satori v1.68: name and icon"
+        run: |
+          python3 "$GITHUB_WORKSPACE/ours/ci/patches/v168-satori.py"
+
       - name: Pre-generate files that Xcode expects to already exist
         working-directory: src
         run: |
@@ -2199,8 +2207,8 @@ jobs:
               print("frequency tables written:", len(index))
           HL
           PLIST="$APPDIR/Info.plist"
-          /usr/libexec/PlistBuddy -c "Set :CFBundleDisplayName Yomikiri-RU" "$PLIST" || /usr/libexec/PlistBuddy -c "Add :CFBundleDisplayName string Yomikiri-RU" "$PLIST"
-          /usr/libexec/PlistBuddy -c "Set :CFBundleName Yomikiri-RU" "$PLIST" || true
+          /usr/libexec/PlistBuddy -c "Set :CFBundleDisplayName Satori" "$PLIST" || /usr/libexec/PlistBuddy -c "Add :CFBundleDisplayName string Satori" "$PLIST"
+          /usr/libexec/PlistBuddy -c "Set :CFBundleName Satori" "$PLIST" || true
           # app version in the app, the extensions and the frameworks
           for P in "$PLIST" "$APPDIR"/PlugIns/*.appex/Info.plist "$APPDIR"/Frameworks/*.framework/Info.plist; do
             [ -f "$P" ] || continue
@@ -2245,14 +2253,14 @@ jobs:
           else
             find ipa/Payload \( -name "*.appex" -o -name "*.framework" -o -name "*.app" \) -print0 | xargs -0 -I{} codesign --remove-signature "{}" || true
           fi
-          (cd ipa && zip -qry ../Yomikiri-RU-v${{ env.APP_VERSION }}.ipa Payload)
-          ls -la Yomikiri-RU-v${{ env.APP_VERSION }}.ipa
+          (cd ipa && zip -qry ../Satori-v${{ env.APP_VERSION }}.ipa Payload)
+          ls -la Satori-v${{ env.APP_VERSION }}.ipa
 
       - name: Upload ipa
         uses: actions/upload-artifact@v4
         with:
-          name: Yomikiri-RU-v${{ env.APP_VERSION }}-ipa
-          path: src/Yomikiri-RU-v${{ env.APP_VERSION }}.ipa
+          name: Satori-v${{ env.APP_VERSION }}-ipa
+          path: src/Satori-v${{ env.APP_VERSION }}.ipa
 
       - name: Upload build log
         if: always()
