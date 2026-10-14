@@ -1,3 +1,6 @@
+> Satori is a fork of Yomikiri: this file describes the original Yomikiri source tree, whose names it keeps.
+> The Satori changes are patch scripts in `ci/patches/` (see README.md).
+
 `/main`: Contains the main frontend code.
 
 - `/main/src/extension`: Stores entry points.

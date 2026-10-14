@@ -1,32 +1,29 @@
-## About
+## Типы заметок
 
-These are Anki note types designed to work well with Yomikiri.
-The note type can be used on desktop, iPad, iPhone.
-Night mode is supported.
+Типы заметок Anki, которые хорошо работают с Satori. Они достались от Yomikiri, поэтому в Anki называются «Yomikiri…». Подходят для компьютера, iPad и iPhone, поддерживают ночной режим.
 
-Click the below link to download the Anki note types, and open the file in Anki or AnkiMobile app.
+Скачайте файл и откройте его в Anki или AnkiMobile:
 
-<a href="https://raw.githubusercontent.com/bluegreenmagick/yomikiri/main/extra/resources/anki/Yomikiri%20Japanese%20Note%20Types.apkg">Yomikiri Japanese Notetypes.apkg</a>
+<a href="./extra/resources/anki/Yomikiri%20Japanese%20Note%20Types.apkg">Japanese Note Types.apkg</a>
 
 ## Japanese Word
 
 <p align="center">
+  <img src="./extra/resources/anki/yomikiri_anki_jp_word_front.png" height="320"/>
   <img src="./extra/resources/anki/yomikiri_anki_jp_word_back.png" height="320"/>
   <img src="./extra/resources/anki/yomikiri_anki_iphone_jp_word_front.jpeg" height="320"/>
   <img src="./extra/resources/anki/yomikiri_anki_iphone_jp_word_back.jpeg" height="320"/>
 </p>
 
-This note type shows you a Japanese word on the front side. Your aim is to recall its meaning and reading. Sentence is also shown on the back side.
+На лицевой стороне — японское слово: нужно вспомнить значение и чтение. На обороте показывается и предложение.
 
-### Yomikiri Configuration
+### Настройка в Satori
 
 <p align="center">
   <img src="./extra/resources/anki/yomikiri_anki_template_jp_word.png" height="320"/>
 </p>
 
-Above is the recommended Yomikiri configuration for this note type.
-
-You can configure Anki Template in Yomikiri Settings. Click the 'options' button left of the field dropbox, and configure the field options so the template becomes identical to above screenshot.
+Рекомендуемый шаблон для этого типа заметок — на скриншоте выше. Шаблон Anki настраивается в Satori: Настройки → Anki → «Настроить шаблон Anki». Кнопка слева от выбора поля открывает его параметры.
 
 ## Japanese Context
 
@@ -36,16 +33,12 @@ You can configure Anki Template in Yomikiri Settings. Click the 'options' button
   <img src="./extra/resources/anki/yomikiri_anki_iphone_jp_context_back.jpeg" height="320"/>
 </p>
 
-This note type shows you the word used in context of a real sentence on the front.
+На лицевой стороне — слово в настоящем предложении. Лучше выбирать в Satori нужное значение слова, а не добавлять все.
 
-Instead of adding the full meaning of the word, it is recommended to choose the relevant meaning in Yomikiri when adding note to Anki.
-
-### Yomikiri Configuration
+### Настройка в Satori
 
 <p align="center">
   <img src="./extra/resources/anki/yomikiri_anki_template_jp_context.png" height="320"/>
 </p>
 
-Above is the recommended Yomikiri configuration for this note type.
-
-You can configure Anki Template in Yomikiri Settings. Click the 'options' button left of the field dropbox, and configure the field options so the template becomes identical to above screenshot.
+Рекомендуемый шаблон для этого типа заметок — на скриншоте выше. Настраивается так же, как для Japanese Word.

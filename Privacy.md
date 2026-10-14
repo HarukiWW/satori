@@ -1,19 +1,17 @@
-# Privacy Policy
+# Политика конфиденциальности
 
-Yomikiri does not collect any Personal Information.
+Satori не собирает персональные данные и ничего не отправляет разработчику.
 
-## Permissions
+## Разрешения
 
-We require access to the web page you are browsing to display meanings
-for selected word, and retrieve information used to fill in the Anki note.
+Расширению Safari нужен доступ к открытой странице: чтобы показывать значение выбранного слова и заполнять поля заметки Anki. Эти данные остаются на устройстве.
 
-However, no information is collected by Yomikiri.
+## Сетевые запросы
 
-## Changes to This Privacy Policy
+- **Jimaku** — поиск субтитров, только с вашим ключом и только когда вы его задали.
+- **YouTube** — когда вы открываете ролик.
+- **Перевод предложений** — когда вы нажимаете кнопку перевода.
 
-We may update our Privacy Policy in the future.
-When it is updated, it will be published on this page,
-and it will go into effect immediately.
+## Изменения
 
-You can be notified for changes by watching this Github repo, or
-by periodically checking for changes to this page.
+Если политика изменится, новая версия появится на этой странице и начнёт действовать сразу. Следить за изменениями можно через этот репозиторий на GitHub.

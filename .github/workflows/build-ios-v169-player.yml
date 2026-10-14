@@ -1,4 +1,4 @@
-name: Build iOS v1.68 Satori (Russian dictionary)
+name: Build iOS v1.69 Satori (Russian dictionary)
 
 # Builds the upstream v0.3.5 release code (base) with the Russian dictionary and our own changes.
 # The app version is set in ONE place: APP_VERSION below.
@@ -36,7 +36,7 @@ on:
         default: true
 
 env:
-  APP_VERSION: "1.68"
+  APP_VERSION: "1.69"
   RELEASE_COMMIT: 0f9ea39181d1dc66ce715665f5ef08b494e261a1
 
 jobs:
@@ -2096,6 +2096,10 @@ jobs:
       - name: "Satori v1.68: name and icon"
         run: |
           python3 "$GITHUB_WORKSPACE/ours/ci/patches/v168-satori.py"
+
+      - name: "Satori v1.69: extension icons, names, accent color"
+        run: |
+          python3 "$GITHUB_WORKSPACE/ours/ci/patches/v169-satori.py"
 
       - name: Pre-generate files that Xcode expects to already exist
         working-directory: src

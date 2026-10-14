@@ -1,3 +1,17 @@
+# Satori (fork of Yomikiri)
+
+This repository is **Satori**, a fork of Yomikiri (BlueGreenMagick). The source tree below is the original Yomikiri
+code and keeps its names (crates, folders, identifiers, bundle IDs). Satori does not edit it directly:
+
+- the iOS build (`.github/workflows/build-ios-vNNN-player.yml`, only the latest is kept) checks out the original at a
+  fixed commit and applies Python patch scripts from `ci/patches/` in order (big Swift code sits next to them in
+  `.swift` files); icons are in `ci/assets/`;
+- a new version = a copy of the workflow with the next `APP_VERSION` and a new step, plus new hyphen-named scripts;
+- user-facing text is Russian and says "Satori"; "Yomikiri" appears only where it says Satori is a fork of it;
+- update `README.md` after every major change.
+
+---
+
 # CLAUDE.md (`/`)
 
 This CLAUDE.md file describes an overview of the Yomikiri project code. This file is located in the project root directory.
