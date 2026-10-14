@@ -1,4 +1,4 @@
-name: Build iOS v1.73 Satori (Russian dictionary)
+name: Build iOS v1.74 Satori (Russian dictionary)
 
 # Builds the upstream v0.3.5 release code (base) with the Russian dictionary and our own changes.
 # The app version is set in ONE place: APP_VERSION below.
@@ -36,7 +36,7 @@ on:
         default: true
 
 env:
-  APP_VERSION: "1.73"
+  APP_VERSION: "1.74"
   RELEASE_COMMIT: 0f9ea39181d1dc66ce715665f5ef08b494e261a1
 
 jobs:
@@ -2124,6 +2124,18 @@ jobs:
       - name: "Satori v1.73: reading (grades, volumes, place, queue, statistics)"
         run: |
           python3 "$GITHUB_WORKSPACE/ours/ci/patches/v173-reader.py"
+
+      - name: "Satori v1.74: reading (smooth lists, folding volumes, search, chapters in the statistics)"
+        run: |
+          python3 "$GITHUB_WORKSPACE/ours/ci/patches/v174-reader.py"
+
+      - name: "Satori v1.74: analysis (smarter rules, a faster catalog, all unknown words)"
+        run: |
+          python3 "$GITHUB_WORKSPACE/ours/ci/patches/v174-analysis.py"
+
+      - name: "Satori v1.74: subtitle rows, statistics, unknown words into the queue, Safari without statistics"
+        run: |
+          python3 "$GITHUB_WORKSPACE/ours/ci/patches/v174-ui.py"
 
       - name: Pre-generate files that Xcode expects to already exist
         working-directory: src
