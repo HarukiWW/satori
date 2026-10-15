@@ -20,7 +20,11 @@ t = once(t, '''          const itemsLine =
               : glossesHtml(items) + (withExamples ? examplesHtml(sense) : "");
 ''', "full meaning")
 t = once(t, '''    line += escapeHTML(items.join(", ")) + (withExamples ? examplesHtml(sense) : "");
-''', '''    line += glossesHtml(items) + (withExamples ? examplesHtml(sense) : "");
+''', '''    // "one line" (the Kaishi look): the glosses after commas and no examples, also for a chosen meaning
+    line +=
+      opts.full_format === "line"
+        ? escapeHTML(items.join(", "))
+        : glossesHtml(items) + (withExamples ? examplesHtml(sense) : "");
 ''', "single meaning")
 start = t.index("/** The example sentences of a sense with their translations;")
 end = t.index("/** The examples of the chosen meaning, or of the first meaning that has some. */")
