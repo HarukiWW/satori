@@ -34,6 +34,14 @@ on:
         description: 'Let the display link run above 60 Hz on ProMotion (CADisableMinimumFrameDurationOnPhone). Turn off to compare with 60 Hz.'
         type: boolean
         default: true
+      runner:
+        description: 'Runner: macos-26; macos-15-intel when GitHub has no Apple Silicon runners free (Xcode 26 is there too)'
+        type: choice
+        options:
+          - macos-26
+          - macos-15-intel
+          - macos-15
+        default: macos-26
 
 env:
   APP_VERSION: "1.83"
@@ -41,7 +49,7 @@ env:
 
 jobs:
   build:
-    runs-on: macos-26
+    runs-on: ${{ inputs.runner || 'macos-26' }}
     timeout-minutes: 120
     permissions:
       contents: read
