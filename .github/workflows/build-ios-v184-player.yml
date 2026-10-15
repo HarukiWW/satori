@@ -1,4 +1,4 @@
-name: Build iOS v1.83 Satori (Russian dictionary)
+name: Build iOS v1.84 Satori (Russian dictionary)
 
 # Builds the upstream v0.3.5 release code (base) with the Russian dictionary and our own changes.
 # The app version is set in ONE place: APP_VERSION below.
@@ -44,7 +44,7 @@ on:
         default: macos-26
 
 env:
-  APP_VERSION: "1.83"
+  APP_VERSION: "1.84"
   RELEASE_COMMIT: 0f9ea39181d1dc66ce715665f5ef08b494e261a1
 
 jobs:
@@ -2208,6 +2208,10 @@ jobs:
       - name: "Satori v1.83: line sound from the playing track, cap of the glosses"
         run: |
           python3 "$GITHUB_WORKSPACE/ours/ci/patches/v183-fixes.py"
+
+      - name: "Satori v1.84: Jimaku reads Chapter NN names"
+        run: |
+          python3 "$GITHUB_WORKSPACE/ours/ci/patches/v184-jimaku.py"
 
       - name: Pre-generate files that Xcode expects to already exist
         working-directory: src
