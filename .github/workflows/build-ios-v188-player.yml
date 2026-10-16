@@ -2229,6 +2229,10 @@ jobs:
         run: |
           python3 "$GITHUB_WORKSPACE/ours/ci/patches/v188-context.py"
 
+      - name: "Satori v1.88: inline titles of the root lists (no jump on the way back)"
+        run: |
+          python3 "$GITHUB_WORKSPACE/ours/ci/patches/v188-nav.py"
+
       - name: Pre-generate files that Xcode expects to already exist
         working-directory: src
         run: |
