@@ -459,6 +459,73 @@ enum SubtitleStyle {
     }
 }
 '''
+# ---------- Настройки → Внешний вид (native) ----------
+s = once(s, r'''                HStack {
+                    Text("Японский шрифт")
+                    Spacer()
+                    TextField("по умолчанию", text: config.string("general.font", ""))
+                        .multilineTextAlignment(.trailing)
+                        .foregroundColor(.secondary)
+                }
+''', r'''                Picker("Японский шрифт", selection: config.string("general.font", "")) {
+                    ForEach(NativeSettingsView.fonts(config.string("general.font", "").wrappedValue), id: \.0) { item in
+                        Text(item.1).tag(item.0)
+                    }
+                }
+''', "appearance font")
+s = once(s, r'''                Stepper(value: config.int("general.font_size", 11), in: 9 ... 24) {
+                    HStack {
+                        Text("Размер шрифта")
+                        Spacer()
+                        Text(String(config.int("general.font_size", 11).wrappedValue)).foregroundColor(.secondary)
+                    }
+                }
+                Stepper(value: config.int("general.tooltip_max_height", 300), in: 120 ... 1200, step: 20) {
+                    HStack {
+                        Text("Высота подсказки")
+                        Spacer()
+                        Text(String(config.int("general.tooltip_max_height", 300).wrappedValue)).foregroundColor(.secondary)
+                    }
+                }
+            } header: {
+                Text("Внешний вид")
+            }
+''', r'''                Stepper(value: config.int("general.subtitle_size", 22), in: 14 ... 36) {
+                    HStack {
+                        Text("Размер субтитров")
+                        Spacer()
+                        Text(String(config.int("general.subtitle_size", 22).wrappedValue)).foregroundColor(.secondary)
+                    }
+                }
+                Stepper(value: config.int("general.tooltip_max_height", 300), in: 120 ... 1200, step: 20) {
+                    HStack {
+                        Text("Окно словаря в Safari")
+                        Spacer()
+                        Text(String(config.int("general.tooltip_max_height", 300).wrappedValue)).foregroundColor(.secondary)
+                    }
+                }
+            } header: {
+                Text("Внешний вид")
+            } footer: {
+                Text("Шрифт — у словаря и субтитров плеера. Окно словаря в Safari — его наибольшая высота на сайтах. Размер текста словаря меняют кнопки A− / A+ в самом словаре.")
+            }
+''', "appearance steppers")
+s = once(s, r'''    private static let colors: [(String, String)] = [
+''', r'''    /// The Japanese fonts of iOS; a font typed in by hand before 1.85 stays in the list.
+    static func fonts(_ current: String) -> [(String, String)] {
+        var list: [(String, String)] = [
+            ("", "Системный"), ("Hiragino Sans", "Hiragino Sans"), ("Hiragino Mincho ProN", "Минтё (с засечками)"),
+            ("Hiragino Maru Gothic ProN", "Скруглённый"),
+        ]
+        if !list.contains(where: { $0.0 == current }) {
+            list.append((current, current))
+        }
+        return list
+    }
+
+    private static let colors: [(String, String)] = [
+''', "appearance font list")
+
 hv.write_text(s, encoding="utf-8")
 
 # ---------- the dictionary tab: black under the tab bar ----------
