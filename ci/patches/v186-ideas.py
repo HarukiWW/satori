@@ -275,7 +275,11 @@ t = mv.read_text(encoding="utf-8")
 t = once(t, '''            HelpView()
                 .tabItem {
 ''', '''            HelpView()
-                .background(SatoriBackdrop())
+                .background {
+                    if #available(iOS 16.0, *) {
+                        SatoriBackdrop()
+                    }
+                }
                 .tabItem {
 ''', "statistics backdrop")
 mv.write_text(t, encoding="utf-8")

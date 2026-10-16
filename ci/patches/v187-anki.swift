@@ -255,6 +255,7 @@ enum VideoFrameGrab {
 
 /// A note from the list of unknown words of a series: the clearest line of the series with the word (the fewest
 /// other unknown words, a readable length), its sound and its frame from the video.
+@available(iOS 16.0, *)
 enum ListMining {
     struct Line {
         let text: String

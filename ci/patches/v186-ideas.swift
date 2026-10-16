@@ -156,6 +156,7 @@ struct MarksResetRow: View {
 
 /// The background of the main screens: words and kanji of your cards in a dim grid, shown only inside soft patches
 /// that drift slowly across the screen (Настройки → Внешний вид → «Живой фон»).
+@available(iOS 16.0, *)
 struct SatoriBackdrop: View {
     @AppStorage("ykBackdrop") private var on = true
     @Environment(\.accessibilityReduceMotion) private var reduceMotion
