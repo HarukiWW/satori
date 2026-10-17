@@ -1,4 +1,4 @@
-name: Build iOS v1.98 Satori (Russian dictionary)
+name: Build iOS v2.00 Satori (Russian dictionary)
 
 # Builds the upstream v0.3.5 release code (base) with the Russian dictionary and our own changes.
 # The app version is set in ONE place: APP_VERSION below.
@@ -44,7 +44,7 @@ on:
         default: macos-26
 
 env:
-  APP_VERSION: "1.98"
+  APP_VERSION: "2.00"
   RELEASE_COMMIT: 0f9ea39181d1dc66ce715665f5ef08b494e261a1
 
 jobs:
@@ -2277,6 +2277,14 @@ jobs:
         run: |
           python3 "$GITHUB_WORKSPACE/ours/ci/patches/v198-backups.py"
 
+      - name: "Satori v2.00: grammar decks N5-N1 (check)"
+        run: |
+          python3 "$GITHUB_WORKSPACE/ours/ci/assets/grammar/check.py"
+
+      - name: "Satori v2.00: grammar decks N5-N1 with FSRS, level test, grammar in the difficulty"
+        run: |
+          python3 "$GITHUB_WORKSPACE/ours/ci/patches/v200-grammar.py"
+
       - name: Pre-generate files that Xcode expects to already exist
         working-directory: src
         run: |
@@ -2392,6 +2400,9 @@ jobs:
               (hl / "index.json").write_text(json.dumps(index, ensure_ascii=False), encoding="utf-8")
               print("frequency tables written:", len(index))
           HL
+          # the grammar decks (v2.00), read by the app from res/grammar
+          mkdir -p "$APPDIR/res/grammar"
+          cp "$GITHUB_WORKSPACE"/ours/ci/assets/grammar/n*.json "$APPDIR/res/grammar/"
           PLIST="$APPDIR/Info.plist"
           /usr/libexec/PlistBuddy -c "Set :CFBundleDisplayName Satori" "$PLIST" || /usr/libexec/PlistBuddy -c "Add :CFBundleDisplayName string Satori" "$PLIST"
           /usr/libexec/PlistBuddy -c "Set :CFBundleName Satori" "$PLIST" || true
