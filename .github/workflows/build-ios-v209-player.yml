@@ -1,4 +1,4 @@
-name: Build iOS v2.08 Satori (Russian dictionary)
+name: Build iOS v2.09 Satori (Russian dictionary)
 
 # Builds the upstream v0.3.5 release code (base) with the Russian dictionary and our own changes.
 # The app version is set in ONE place: APP_VERSION below.
@@ -44,7 +44,7 @@ on:
         default: macos-26
 
 env:
-  APP_VERSION: "2.08"
+  APP_VERSION: "2.09"
   RELEASE_COMMIT: 0f9ea39181d1dc66ce715665f5ef08b494e261a1
 
 jobs:
@@ -2317,6 +2317,10 @@ jobs:
         run: |
           python3 "$GITHUB_WORKSPACE/ours/ci/patches/v208-speed-motion.py"
 
+      - name: "Satori v2.09: grammar marks, the card fade, «О приложении», queued words, Apple's voice"
+        run: |
+          python3 "$GITHUB_WORKSPACE/ours/ci/patches/v209-fixes.py"
+
       - name: Pre-generate files that Xcode expects to already exist
         working-directory: src
         run: |
@@ -2436,6 +2440,14 @@ jobs:
           # the grammar decks (v2.00), read by the app from res/grammar
           mkdir -p "$APPDIR/res/grammar"
           cp "$GITHUB_WORKSPACE"/ours/ci/assets/grammar/n*.json "$APPDIR/res/grammar/"
+          # the third-party licences for «О приложении» (v2.09)
+          LICENSES=$(find extra/generate-license -name THIRD_PARTY.txt 2>/dev/null | head -n1 || true)
+          if [ -n "$LICENSES" ]; then
+            cp "$LICENSES" "$APPDIR/res/THIRD_PARTY.txt"
+            ls -la "$APPDIR/res/THIRD_PARTY.txt"
+          else
+            echo "no THIRD_PARTY.txt: «О приложении» goes without the licences"
+          fi
           PLIST="$APPDIR/Info.plist"
           /usr/libexec/PlistBuddy -c "Set :CFBundleDisplayName Satori" "$PLIST" || /usr/libexec/PlistBuddy -c "Add :CFBundleDisplayName string Satori" "$PLIST"
           /usr/libexec/PlistBuddy -c "Set :CFBundleName Satori" "$PLIST" || true
