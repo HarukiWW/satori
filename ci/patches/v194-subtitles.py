@@ -108,7 +108,7 @@ s = once(s, '''        reload()
             changed = true
             let base = item.url.deletingPathExtension()
             let hasSubtitles = VideoLibraryStore.jimakuFile(for: item.url) != nil
-                || VideoLibraryStore.sidecarSubtitle(for: item.url) != nil
+                || NativeVideoEngine.sidecarSubtitle(for: item.url) != nil
                 || FileManager.default.fileExists(atPath: base.appendingPathExtension("ja.srt").path)
             if !hasSubtitles {
                 findSubtitles(item.url)
