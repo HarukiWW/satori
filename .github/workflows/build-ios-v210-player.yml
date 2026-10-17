@@ -1,4 +1,4 @@
-name: Build iOS v2.09 Satori (Russian dictionary)
+name: Build iOS v2.10 Satori (Russian dictionary)
 
 # Builds the upstream v0.3.5 release code (base) with the Russian dictionary and our own changes.
 # The app version is set in ONE place: APP_VERSION below.
@@ -44,7 +44,7 @@ on:
         default: macos-26
 
 env:
-  APP_VERSION: "2.09"
+  APP_VERSION: "2.10"
   RELEASE_COMMIT: 0f9ea39181d1dc66ce715665f5ef08b494e261a1
 
 jobs:
@@ -2320,6 +2320,10 @@ jobs:
       - name: "Satori v2.09: grammar marks, the card fade, «О приложении», queued words, Apple's voice"
         run: |
           python3 "$GITHUB_WORKSPACE/ours/ci/patches/v209-fixes.py"
+
+      - name: "Satori v2.10: the voice of Satori in the settings, the folder of iTorrent in «Видео»"
+        run: |
+          python3 "$GITHUB_WORKSPACE/ours/ci/patches/v210-voice-linked.py"
 
       - name: Pre-generate files that Xcode expects to already exist
         working-directory: src
