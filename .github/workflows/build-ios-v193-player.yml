@@ -1,4 +1,4 @@
-name: Build iOS v1.92 Satori (Russian dictionary)
+name: Build iOS v1.93 Satori (Russian dictionary)
 
 # Builds the upstream v0.3.5 release code (base) with the Russian dictionary and our own changes.
 # The app version is set in ONE place: APP_VERSION below.
@@ -44,7 +44,7 @@ on:
         default: macos-26
 
 env:
-  APP_VERSION: "1.92"
+  APP_VERSION: "1.93"
   RELEASE_COMMIT: 0f9ea39181d1dc66ce715665f5ef08b494e261a1
 
 jobs:
@@ -2248,6 +2248,10 @@ jobs:
       - name: "Satori v1.92: folder picker shown by UIKit, a backup chosen as a file"
         run: |
           python3 "$GITHUB_WORKSPACE/ours/ci/patches/v192-backups.py"
+
+      - name: "Satori v1.93: whole furigana words, wandering background, backups from the Anki folder, faster add"
+        run: |
+          python3 "$GITHUB_WORKSPACE/ours/ci/patches/v193-fixes.py"
 
       - name: Pre-generate files that Xcode expects to already exist
         working-directory: src
