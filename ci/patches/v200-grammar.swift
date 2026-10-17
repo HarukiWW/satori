@@ -874,6 +874,7 @@ struct GrammarReviewView: View {
                     Image(systemName: "arrow.uturn.backward")
                 }
                 .disabled(!store.canUndo)
+                .accessibilityLabel("Отменить последний ответ")
             }
         }
         .sheet(item: $lookup) { item in
@@ -950,11 +951,13 @@ struct GrammarReviewView: View {
                 } label: {
                     Image(systemName: "speaker.wave.2.fill")
                 }
+                .accessibilityLabel("Озвучить предложение")
                 Button {
                     lookup = LineLookup(text: example.ja, charAt: 0)
                 } label: {
                     Image(systemName: "character.book.closed")
                 }
+                .accessibilityLabel("Открыть в словаре")
             }
             .font(.title3)
             .buttonStyle(.borderless)
@@ -1160,6 +1163,7 @@ struct GrammarTestView: View {
                             .font(.title3)
                     }
                     .buttonStyle(.borderless)
+                    .accessibilityLabel("Озвучить предложение")
                     if chosen != nil {
                         Text(item.point.pattern + " — " + item.example.ru)
                             .font(.callout)
@@ -1362,12 +1366,14 @@ struct GrammarPointView: View {
                             Image(systemName: "speaker.wave.2.fill")
                         }
                         .buttonStyle(.borderless)
+                        .accessibilityLabel("Озвучить предложение")
                         Button {
                             lookup = LineLookup(text: example.ja, charAt: 0)
                         } label: {
                             Image(systemName: "character.book.closed")
                         }
                         .buttonStyle(.borderless)
+                        .accessibilityLabel("Открыть в словаре")
                     }
                 }
             } header: {
