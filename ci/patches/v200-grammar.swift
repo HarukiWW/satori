@@ -1104,7 +1104,7 @@ struct GrammarTestView: View {
         for point in all.shuffled() where !excluding.contains(point.id) {
             guard let example = point.examples.randomElement() else { continue }
             var options: [String] = [point.short]
-            for other in all.shuffled() where !options.contains(other.short) {
+            for other in all.shuffled() where !options.contains(other.short) && !similar(point.short, other.short) {
                 options.append(other.short)
                 if options.count == 4 {
                     break
@@ -1118,6 +1118,22 @@ struct GrammarTestView: View {
             }
         }
         return result
+    }
+
+    /// Meanings that share a word (4+ letters, not a mark of style) are near synonyms: never options side by side.
+    static func similar(_ first: String, _ second: String) -> Bool {
+        let styles: Set<String> = ["книжно", "разговорно", "вежливо", "официально"]
+        func words(_ text: String) -> Set<String> {
+            var result = Set<String>()
+            for part in text.lowercased().split(whereSeparator: { !$0.isLetter }) where part.count >= 4 {
+                let word = String(part)
+                if !styles.contains(word) {
+                    result.insert(word)
+                }
+            }
+            return result
+        }
+        return !words(first).isDisjoint(with: words(second))
     }
 
     static func score(right: Int, wrong: Int, asked: Int) -> Double {
