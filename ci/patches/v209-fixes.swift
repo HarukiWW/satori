@@ -123,12 +123,17 @@ extension MiningQueue {
                     value = value.replacingOccurrences(of: "<[^>]*>", with: "", options: .regularExpression)
                 }
                 if hasAnyScalar(value, of: "[") {
+                    // the kana of the furigana, katakana as hiragana (as the lists keep the words)
                     var kana = ""
                     for scalar in value.unicodeScalars where !statIsKanji(scalar) && !"[] ".unicodeScalars.contains(scalar) {
-                        kana.unicodeScalars.append(scalar)
+                        if (0x30A1 ... 0x30F6).contains(scalar.value), let hiragana = Unicode.Scalar(scalar.value - 0x60) {
+                            kana.unicodeScalars.append(hiragana)
+                        } else {
+                            kana.unicodeScalars.append(scalar)
+                        }
                     }
                     if !kana.isEmpty {
-                        words.append(HighlightData.hiragana(kana))
+                        words.append(kana)
                     }
                     value = value.replacingOccurrences(of: "\\[[^\\]]*\\]", with: "", options: .regularExpression)
                 }
