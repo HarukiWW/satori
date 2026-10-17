@@ -63,11 +63,27 @@ struct SatoriBackdrop: View {
         let angle: Double
     }
 
-    /// nine small tilted patches, each on its own path (one turn every 50 to 120 s)
-    private static let paths: [(sx: Double, sy: Double, phase: Double, size: Double, tilt: Double)] = (0 ..< 9).map { i in
-        (0.05 + 0.013 * Double((i * 5) % 7), 0.06 + 0.011 * Double((i * 3) % 7), Double(i) * 0.7 + 0.3,
-         0.26 + 0.04 * Double((i * 2) % 4), -0.4 - 0.08 * Double(i % 4))
+    private struct Path {
+        let sx: Double
+        let sy: Double
+        let phase: Double
+        let size: Double
+        let tilt: Double
     }
+
+    /// nine small tilted patches, each on its own path (one turn every 50 to 120 s)
+    private static let paths: [Path] = {
+        var made: [Path] = []
+        for i in 0 ..< 9 {
+            let k = Double(i)
+            let sx: Double = 0.05 + 0.013 * Double((i * 5) % 7)
+            let sy: Double = 0.06 + 0.011 * Double((i * 3) % 7)
+            let size: Double = 0.26 + 0.04 * Double((i * 2) % 4)
+            let tilt: Double = -0.4 - 0.08 * Double(i % 4)
+            made.append(Path(sx: sx, sy: sy, phase: k * 0.7 + 0.3, size: size, tilt: tilt))
+        }
+        return made
+    }()
 
     var body: some View {
         ZStack {
@@ -105,7 +121,8 @@ struct SatoriBackdrop: View {
             let y = (Double(r) + 0.5) * Self.cell.height
             let stream = streams[r % streams.count]
             // every row slides to the left at its own pace, smoothly
-            let travelled = time * (4.0 + Double((r * 7) % 5) * 1.5)
+            let speed: Double = 4.0 + Double((r * 7) % 5) * 1.5
+            let travelled: Double = time * speed
             let steps = Int((travelled / w).rounded(.down))
             let shift = travelled - Double(steps) * w
             for c in 0 ... cols {
@@ -121,13 +138,15 @@ struct SatoriBackdrop: View {
     }
 
     private static func blobs(_ t: Double) -> [Blob] {
-        paths.map { p in
-            Blob(x: 0.5 + 0.6 * sin(t * p.sx + p.phase),
-                 y: 0.5 + 0.6 * sin(t * p.sy + p.phase * 1.9),
-                 rx: p.size * (1 + 0.2 * sin(t * 0.07 + p.phase)),
-                 ry: p.size * 0.5,
-                 angle: p.tilt + 0.25 * sin(t * 0.05 + p.phase))
+        var made: [Blob] = []
+        for p in paths {
+            let x: Double = 0.5 + 0.6 * sin(t * p.sx + p.phase)
+            let y: Double = 0.5 + 0.6 * sin(t * p.sy + p.phase * 1.9)
+            let rx: Double = p.size * (1 + 0.2 * sin(t * 0.07 + p.phase))
+            let angle: Double = p.tilt + 0.25 * sin(t * 0.05 + p.phase)
+            made.append(Blob(x: x, y: y, rx: rx, ry: p.size * 0.5, angle: angle))
         }
+        return made
     }
 
     /// How bright the letters are at a point (x and y from 0 to 1): soft edges, separate patches, a dim maximum.
