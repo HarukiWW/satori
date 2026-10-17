@@ -283,7 +283,10 @@ s = once(s, '''    /// Cues of an external file (.srt, .vtt, .ass, .ssa).
         let values = try? url.resourceValues(forKeys: [.contentModificationDateKey, .fileSizeKey])
         let stamp: Double = values?.contentModificationDate?.timeIntervalSince1970 ?? 0
         let strip: Bool = UserDefaults.standard.object(forKey: "ykStripSDH") as? Bool ?? true
-        let key: String = url.path + "|" + String(stamp) + "|" + String(values?.fileSize ?? -1) + (strip ? "|s" : "|k")
+        let size: Int = values?.fileSize ?? -1
+        var key: String = url.path + "|" + String(stamp)
+        key += "|" + String(size)
+        key += strip ? "|s" : "|k"
         if let saved = parsedFiles.object(forKey: key as NSString) {
             return saved.cues
         }

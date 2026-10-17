@@ -133,7 +133,9 @@ struct GrammarStatsView: View {
     @AppStorage("ykGrammarStatsLevel") private var level = 0
 
     private func percent(_ right: Int, _ all: Int) -> String {
-        all == 0 ? "—" : String(Int((Double(right) * 100 / Double(all)).rounded())) + "%"
+        guard all > 0 else { return "—" }
+        let value: Int = Int((Double(right) * 100 / Double(all)).rounded())
+        return String(value) + "%"
     }
 
     private func card<Content: View>(_ title: String, @ViewBuilder _ content: () -> Content) -> some View {
@@ -148,27 +150,49 @@ struct GrammarStatsView: View {
         .cornerRadius(14)
     }
 
+    /// The lines of «Сегодня», built in steps (one long expression is too slow for the type checker).
+    private func todayLines(_ stats: GrammarStats) -> [String] {
+        guard stats.studied > 0 else { return [] }
+        let studied: String = String(stats.studied)
+        let minutes: String = String(Int((stats.seconds / 60).rounded()))
+        let each: String = String(Int((stats.seconds / Double(stats.studied)).rounded()))
+        var first: String = "Изучено " + studied
+        first += " за " + minutes + " мин"
+        first += " (" + each + " с на карточку)"
+        var second: String = "Снова: " + String(stats.again)
+        second += " · правильно " + percent(stats.studied - stats.again, stats.studied)
+        var third: String = "Изучение: " + String(stats.learned)
+        third += " · повторение: " + String(stats.reviewed)
+        third += " · переучивание: " + String(stats.relearned)
+        var lines: [String] = [first, second, third]
+        if stats.matureAll > 0 {
+            var mature: String = "Зрелые: " + String(stats.matureRight)
+            mature += " из " + String(stats.matureAll)
+            mature += " (" + percent(stats.matureRight, stats.matureAll) + ")"
+            lines.append(mature)
+        }
+        return lines
+    }
+
     private func today(_ stats: GrammarStats) -> some View {
-        VStack(alignment: .leading, spacing: 6) {
-            if stats.studied == 0 {
+        let lines = todayLines(stats)
+        return VStack(alignment: .leading, spacing: 6) {
+            if lines.isEmpty {
                 Text("Сегодня карточки не изучались.")
                     .foregroundColor(.secondary)
-            } else {
-                let minutes: Int = Int((stats.seconds / 60).rounded())
-                let each: Int = Int((stats.seconds / Double(stats.studied)).rounded())
-                Text("Изучено " + String(stats.studied) + " за " + String(minutes) + " мин (" + String(each)
-                    + " с на карточку)")
-                Text("Снова: " + String(stats.again) + " · правильно "
-                    + percent(stats.studied - stats.again, stats.studied))
-                Text("Изучение: " + String(stats.learned) + " · повторение: " + String(stats.reviewed)
-                    + " · переучивание: " + String(stats.relearned))
-                if stats.matureAll > 0 {
-                    Text("Зрелые: " + String(stats.matureRight) + " из " + String(stats.matureAll) + " ("
-                        + percent(stats.matureRight, stats.matureAll) + ")")
-                }
+            }
+            ForEach(lines, id: \.self) { line in
+                Text(line)
             }
         }
         .font(.subheadline)
+    }
+
+    private func meanLine(_ mean: Double, _ total: Int) -> String {
+        let share: String = String(Int((mean * 100).rounded()))
+        var line: String = "В среднем: " + share + "%"
+        line += " · карточек: " + String(total)
+        return line
     }
 
     private func cell(_ right: Int, _ all: Int) -> some View {
@@ -233,7 +257,7 @@ struct GrammarStatsView: View {
                 .font(.caption2)
                 .foregroundColor(.secondary)
                 if let mean {
-                    Text("В среднем: " + String(Int((mean * 100).rounded())) + "% · карточек: " + String(total))
+                    Text(meanLine(mean, total))
                         .font(.subheadline)
                 }
             }
@@ -316,15 +340,18 @@ extension VideoLibraryStore {
         }
         Task { @MainActor in
             var found = 0
+            let all: String = String(videos.count)
             for (i, video) in videos.enumerated() {
-                status[name] = "Jimaku: " + String(i + 1) + " из " + String(videos.count) + "…"
+                let step: String = String(i + 1)
+                status[name] = "Jimaku: " + step + " из " + all + "…"
                 progress[name] = Double(i) / Double(videos.count)
                 if await JimakuFinder.run(video, report: { _ in }) != nil {
                     found += 1
                 }
             }
             progress[name] = nil
-            status[name] = "Jimaku: найдено " + String(found) + " из " + String(videos.count)
+            let done: String = String(found)
+            status[name] = "Jimaku: найдено " + done + " из " + all
             reload()
         }
     }
