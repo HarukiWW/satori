@@ -1,4 +1,4 @@
-name: Build iOS v2.12 Satori (Russian dictionary)
+name: Build iOS v2.13 Satori (Russian dictionary)
 
 # Builds the upstream v0.3.5 release code (base) with the Russian dictionary and our own changes.
 # The app version is set in ONE place: APP_VERSION below.
@@ -44,7 +44,7 @@ on:
         default: macos-26
 
 env:
-  APP_VERSION: "2.12"
+  APP_VERSION: "2.13"
   RELEASE_COMMIT: 0f9ea39181d1dc66ce715665f5ef08b494e261a1
 
 jobs:
@@ -2333,6 +2333,10 @@ jobs:
         run: |
           python3 "$GITHUB_WORKSPACE/ours/ci/patches/v212-fixes.py"
 
+      - name: "Satori v2.13: progress, the order of the statistics, streaks from 10 minutes, the frame watch, YouTube phrases"
+        run: |
+          python3 "$GITHUB_WORKSPACE/ours/ci/patches/v213-stats.py"
+
       - name: Pre-generate files that Xcode expects to already exist
         working-directory: src
         run: |
@@ -2389,6 +2393,7 @@ jobs:
             curl -fsSL --retry 3 -o "$RUNNER_TEMP/Anime4K_Restore_CNN_$kind.glsl" "https://raw.githubusercontent.com/bloc97/Anime4K/master/glsl/Restore/Anime4K_Restore_CNN_$kind.glsl" || echo "Anime4K $kind not downloaded"
           done
           python3 "$GITHUB_WORKSPACE/ours/ci/patches/v212-anime4k.py" "$RUNNER_TEMP/Anime4K_Restore_CNN_M.glsl" "$RUNNER_TEMP/Anime4K_Restore_CNN_L.glsl"
+          python3 "$GITHUB_WORKSPACE/ours/ci/patches/v213-anime4k.py"
           xcodebuild \
             -project "$PROJ" \
             -scheme "$SCHEME" \
