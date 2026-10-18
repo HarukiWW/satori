@@ -1,4 +1,4 @@
-name: Build iOS v2.15 Satori (Russian dictionary)
+name: Build iOS v2.16 Satori (Russian dictionary)
 
 # Builds the upstream v0.3.5 release code (base) with the Russian dictionary and our own changes.
 # The app version is set in ONE place: APP_VERSION below.
@@ -44,7 +44,7 @@ on:
         default: macos-26
 
 env:
-  APP_VERSION: "2.15"
+  APP_VERSION: "2.16"
   RELEASE_COMMIT: 0f9ea39181d1dc66ce715665f5ef08b494e261a1
 
 jobs:
@@ -2344,6 +2344,10 @@ jobs:
       - name: "Satori v2.15: the grammar sentences read by a neural voice, the progress in place of the 7 days"
         run: |
           python3 "$GITHUB_WORKSPACE/ours/ci/patches/v215-voice-progress.py"
+
+      - name: "Satori v2.16: the smart furigana cut by kanji, over the kanji only, without the JLPT rule"
+        run: |
+          python3 "$GITHUB_WORKSPACE/ours/ci/patches/v216-furigana.py"
 
       - name: Pre-generate files that Xcode expects to already exist
         working-directory: src
