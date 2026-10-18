@@ -78,7 +78,7 @@
 
 ### Оборот
 
-Скрипт заменяет фуригану Anki обычными блоками и делит чтение по кандзи (じょう|きょう|か): встроенную фуригану AnkiMobile не даёт двигать через CSS.
+Скрипт заменяет фуригану Anki обычными блоками и делит чтение по кандзи (じょう|きょう|か, した|う): перебирает все способы разрезать чтение и берёт тот, где у каждого кандзи один-два слога и ни одна часть не начинается с маленькой каны, ん, っ или продолжения долгой гласной (こう, せい). Если ни один способ не подходит (今日, 大人), чтение остаётся над всем словом. Встроенную фуригану AnkiMobile не даёт двигать через CSS.
 
 ```html
 <div class="card">
@@ -91,31 +91,86 @@
 </div>
 <script>
 (function () {
-  var SMALL = "ゃゅょぁぃぅぇぉゎャュョァィゥェォヮ";
   var KANJI = /^[㐀-鿿豈-﫿々〆ヶ]$/;
+  var SMALL = "ゃゅょぁぃぅぇぉゎ";
+  var ROWS = {
+    a: "あかさたなはまやらわがざだばぱぁゃ",
+    i: "いきしちにひみりぎじぢびぴぃ",
+    u: "うくすつぬふむゆるぐずづぶぷぅゅ",
+    e: "えけせてねへめれげぜでべぺぇ",
+    o: "おこそとのほもよろをごぞどぼぽぉょ",
+  };
 
-  // чтение по кандзи: じょう|きょう|か; null, если не делится
+  // катакана как хирагана — для правил ниже
+  function hira(c) {
+    var code = c.charCodeAt(0);
+    return code >= 0x30a1 && code <= 0x30f6 ? String.fromCharCode(code - 0x60) : c;
+  }
+
+  function vowel(c) {
+    var h = hira(c);
+    for (var v in ROWS) if (ROWS[v].indexOf(h) >= 0) return v;
+    return "";
+  }
+
+  // слоги части: маленькая кана относится к предыдущей
+  function morae(part) {
+    return Array.from(part).filter(function (c) { return SMALL.indexOf(hira(c)) < 0; }).length;
+  }
+
+  // могут ли части быть чтениями кандзи, по одной на каждый
+  function valid(parts) {
+    for (var i = 0; i < parts.length; i++) {
+      var p = Array.from(parts[i]).map(hira);
+      if ((SMALL + "んっー").indexOf(p[0]) >= 0) return false;
+      if (i > 0) {
+        var prev = Array.from(parts[i - 1]);
+        var before = vowel(prev[prev.length - 1]);
+        // долгая гласная остаётся с каной перед ней: こう, きょう, せい
+        if (p[0] === "う" && (before === "o" || before === "u")) return false;
+        if (p[0] === "い" && before === "e") return false;
+      }
+      // чтение одного кандзи не кончается на あ / い / え-ряд + う (たう, きう, けう)
+      if (p.length >= 2 && p[p.length - 1] === "う") {
+        var v = vowel(p[p.length - 2]);
+        if (v === "a" || v === "i" || v === "e") return false;
+      }
+    }
+    return true;
+  }
+
+  // все способы разрезать буквы на `count` непустых частей
+  function cuts(chars, count) {
+    if (count === 1) return [[chars.join("")]];
+    var out = [];
+    for (var k = 1; k <= chars.length - count + 1; k++) {
+      var head = chars.slice(0, k).join("");
+      cuts(chars.slice(k), count - 1).forEach(function (rest) { out.push([head].concat(rest)); });
+    }
+    return out;
+  }
+
+  // чтение по кандзи: じょう|きょう|か; null, если ни один разрез не подходит (今日, 大人)
   function split(reading, count) {
-    var parts = [];
-    Array.from(reading).forEach(function (c) {
-      var last = parts.length - 1;
-      if (last >= 0 && (SMALL.indexOf(c) >= 0 || "んンっッーうウいイ".indexOf(c) >= 0)) parts[last] += c;
-      else parts.push(c);
+    var chars = Array.from(reading);
+    if (chars.length < count || chars.length > 14 || count > 6) return null;
+    var best = null;
+    var bestScore = Infinity;
+    cuts(chars, count).forEach(function (parts) {
+      if (!valid(parts)) return;
+      // один-два слога на кандзи
+      var score = parts.reduce(function (s, p, i) {
+        var m = morae(p);
+        // い / う после каны чаще её дифтонг (かい, あい), чем начало следующего чтения
+        var lead = i > 0 && "いう".indexOf(hira(p[0])) >= 0 ? 0.3 : 0;
+        return s + (m - 1.5) * (m - 1.5) + lead;
+      }, 0);
+      if (score < bestScore) {
+        best = parts;
+        bestScore = score;
+      }
     });
-    for (var i = parts.length - 1; i > 0 && parts.length > count; i--) {
-      if ("くきつちクキツチ".indexOf(parts[i]) >= 0) {
-        parts[i - 1] += parts[i];
-        parts.splice(i, 1);
-      }
-    }
-    while (parts.length > count) {
-      var best = parts.length - 2;
-      for (var j = parts.length - 2; j >= 0; j--) {
-        if (parts[j].length + parts[j + 1].length < parts[best].length + parts[best + 1].length) best = j;
-      }
-      parts.splice(best, 2, parts[best] + parts[best + 1]);
-    }
-    return parts.length === count ? parts : null;
+    return best;
   }
 
   function box(base, reading) {
@@ -189,8 +244,10 @@
   white-space: nowrap;
   line-height: 1;
 }
+.fg-r { font-size: 0.5em; }
 .word .fg-r { font-size: 0.4em; }
-.sentence .fg-r { font-size: 0.5em; }
+/* примеры в значениях (старые карточки из Yomitan): место под фуригану, чтобы строки не наезжали */
+.meaning .fg { margin-top: 0.6em; }
 ```
 
 После правки шаблона закройте и заново откройте редактор: повторный предпросмотр в AnkiMobile показывает ошибку JavaScript, хотя шаблон работает.
