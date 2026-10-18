@@ -1,4 +1,4 @@
-name: Build iOS v2.13 Satori (Russian dictionary)
+name: Build iOS v2.14 Satori (Russian dictionary)
 
 # Builds the upstream v0.3.5 release code (base) with the Russian dictionary and our own changes.
 # The app version is set in ONE place: APP_VERSION below.
@@ -44,7 +44,7 @@ on:
         default: macos-26
 
 env:
-  APP_VERSION: "2.13"
+  APP_VERSION: "2.14"
   RELEASE_COMMIT: 0f9ea39181d1dc66ce715665f5ef08b494e261a1
 
 jobs:
@@ -2336,6 +2336,10 @@ jobs:
       - name: "Satori v2.13: progress, the order of the statistics, streaks from 10 minutes, the frame watch, YouTube phrases"
         run: |
           python3 "$GITHUB_WORKSPACE/ours/ci/patches/v213-stats.py"
+
+      - name: "Satori v2.14: subtitles from the sound of a video (iOS 26 speech recognition, ahead of the playback)"
+        run: |
+          python3 "$GITHUB_WORKSPACE/ours/ci/patches/v214-speech.py"
 
       - name: Pre-generate files that Xcode expects to already exist
         working-directory: src
