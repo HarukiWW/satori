@@ -42,10 +42,13 @@ const RE_NOKANJI = /[^\u3400-\u4dbf\u4e00-\u9fff\uf900-\ufaff]/u;
 const RE_JAPANESE_CONTENT =
   /[\u3040-\u30ff\u3190-\u319f\u31f0-\u31ff\u3220-\u325f\u3280-\u337f\u33e0-\u4dbf\u4e00-\u9fff\uf900-\ufaff\uff66-\uff9d]/u;
 
+const RE_RUBY_BASE = /[\u3400-\u4dbf\u4e00-\u9fff\uf900-\ufaff々〆ヶ0-9０-９]/u;
+const RE_NO_RUBY_BASE = /[^\u3400-\u4dbf\u4e00-\u9fff\uf900-\ufaff々〆ヶ0-9０-９]/u;
 const RE_KANJI_SEGMENT_SPLIT = new RegExp(
-  `(${RE_KANJI.source}*)(${RE_NOKANJI.source}*)`,
+  `(${RE_RUBY_BASE.source}*)(${RE_NO_RUBY_BASE.source}*)`,
   "g",
 );
+const RE_DIGITS_ONLY = /^[0-9０-９]+$/u;
 
 export namespace RubyString {
   // Some words are longer in kanji
