@@ -684,7 +684,7 @@ jobs:
               ('buttonText={"View"}', 'buttonText={"Открыть"}'),
               ("View licenses for third party open source libraries & resources", "Лицензии сторонних библиотек и ресурсов с открытым кодом"),
               ('title="View source code"', 'title="Исходный код"'),
-              ("https://github.com/bluegreenmagick/yomikiri", "https://github.com/HarukiWW/yomikiri"),
+              ("https://github.com/bluegreenmagick/yomikiri", "https://github.com/itsHiyori/yomikiri"),
               ("Yomikiri is an open source project! You can view the code on GitHub.", "Yomikiri — проект с открытым исходным кодом. Код можно посмотреть на GitHub."),
           ])
 

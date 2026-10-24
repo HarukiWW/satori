@@ -2,7 +2,7 @@
 # - The extension icons (normal and the faded "disabled" one) and the icon of the old onboarding page are the Satori
 #   icon (ci/assets, made from satori-icon.png); icon.svg shows the same picture.
 # - Every visible "Yomikiri" is Satori now, except where it says that Satori is a fork of Yomikiri. The links go to
-#   github.com/HarukiWW/satori. Internal names (bundle IDs, the App Group, the yomikiri:// scheme, code names) stay:
+#   github.com/itsHiyori/satori. Internal names (bundle IDs, the App Group, the yomikiri:// scheme, code names) stay:
 #   changing them would stop the app installing over the old one, lose its data and break the return from AnkiMobile.
 # - Accent color: Settings → Внешний вид → «Акцентный цвет», blue by default. The app (tab bar, switches, buttons,
 #   progress bars) and the web pages (dictionary, Safari tooltip, extension) use it.
@@ -28,7 +28,7 @@ def patch(path, edits):
 
 assets = pathlib.Path(__file__).resolve().parent.parent / "assets"
 main = "src/main/src/"
-repo = "https://github.com/HarukiWW/satori"
+repo = "https://github.com/itsHiyori/satori"
 
 # ---------- icons ----------
 shutil.copyfile(assets / "satori-icon-128.png", main + "assets/static/images/icon128.png")
@@ -51,7 +51,7 @@ patch(main + "components/options/ankiTemplate/AnkiTemplateEdit.svelte", [
 patch(main + "components/options/ankiTemplate/exampleMarkerData.ts",
       [('  pageTitle: "Yomikiri Examples",\n', '  pageTitle: "Satori Examples",\n', "example title")])
 patch(main + "components/options/groups/GroupAbout.svelte", [
-    ('Platform.openExternalLink("https://github.com/HarukiWW/yomikiri");',
+    ('Platform.openExternalLink("https://github.com/itsHiyori/yomikiri");',
      'Platform.openExternalLink("' + repo + '");', "about link"),
     ("    Satori — проект с открытым исходным кодом на основе Yomikiri (BlueGreenMagick). Код можно посмотреть на\n"
      "    GitHub.\n",

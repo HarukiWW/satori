@@ -37,7 +37,7 @@ struct AboutView: View {
                 .padding(.vertical, 6)
             }
             Section {
-                Link("Satori на GitHub", destination: URL(string: "https://github.com/HarukiWW/satori")!)
+                Link("Satori на GitHub", destination: URL(string: "https://github.com/itsHiyori/satori")!)
                 Link("Yomikiri — исходный проект (MIT)",
                      destination: URL(string: "https://github.com/BlueGreenMagick/yomikiri")!)
             } header: {
